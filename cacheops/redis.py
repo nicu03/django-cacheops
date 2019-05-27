@@ -21,6 +21,12 @@ if settings.CACHEOPS_DEGRADE_ON_FAILURE:
             warnings.warn("The cacheops cache is unreachable! Error: %s" % e, RuntimeWarning)
         except redis.TimeoutError as e:
             warnings.warn("The cacheops cache timed out! Error: %s" % e, RuntimeWarning)
+        except redis.ResponseError as e:
+            if 'BUSY Redis is busy'.lower() in str(e).lower():
+                warnings.warn("Redis busy running a script, DEGRADE Forced,"
+                              " Error: %s" % e, RuntimeWarning)
+            else:
+                raise
 else:
     handle_connection_failure = identity
 
